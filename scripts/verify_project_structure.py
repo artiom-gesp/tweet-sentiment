@@ -12,3 +12,6 @@ for file in data_files:
 if error_counter > 0:
     print(f"Found {error_counter} errors in total.")
     exit(1)
+else:
+    print("No errors found.")
+    exit(0)
