@@ -3,7 +3,7 @@ import string
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.en import English
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, HashingVectorizer
 from sklearn.base import TransformerMixin
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
@@ -70,7 +70,7 @@ def clean_text(text):
 # different vectorizers
 bow_vector = CountVectorizer(tokenizer=tweet_cleaner, ngram_range=(1,1))
 tfidf_vector = TfidfVectorizer(tokenizer=tweet_cleaner)
-
+hash_vector = HashingVectorizer(tokenizer=tweet_cleaner)
 
 X = df_train['tweet']
 y = df_train['sentiment']
@@ -82,33 +82,33 @@ print(f'X_test dimension: {X_test.shape}')
 print(f'y_train dimension: {y_test.shape}')
 
 
-# classifier = (verbose=1, solver='lbfgs', max_iter=10000)
-classifier = MLPClassifier(hidden_layer_sizes=(256,128,64), verbose=True)
+classifier = LogisticRegression(verbose=1, solver='lbfgs', max_iter=10000)
+# classifier = MLPClassifier(hidden_layer_sizes=(256,128,64), verbose=True)
 
 
 # Create pipeline using Bag of Words
 components = [
     ("cleaner", predictors()),
-    ("vectorizer", bow_vector),
+    ("vectorizer", hash_vector),
     ("classifier", classifier)
         ]
 pipe = Pipeline(components)
 
 # Test with 1/100 of the data to estimate the time needed
 before = time.time()
-pipe.fit(X_train[:len(X_train)//100], y_train[:len(y_train)//100])
+pipe.fit(X_train[:len(X_train)//1000], y_train[:len(y_train)//1000])
 after = time.time()
-print(f'\n\nTime needed for a 100th ({len(X_train)//100} samples): {after-before} s')
-print(f'Time needed for the whole dataset ({len(X_train)} samples): {(after-before)*100} s\n\n')
+print(f'\n\nTime needed for a 1000th ({len(X_train)//1000} samples): {after-before} s')
+print(f'Time needed for the whole dataset ({len(X_train)} samples): {(after-before)*1000} s\n\n')
 
 # Model generation
-pipe.fit(X_train[:len(X_train)//1000], y_train[:len(y_train)//1000])
-# pipe.fit(X_train, y_train)
+# pipe.fit(X_train[:len(X_train)//1000], y_train[:len(y_train)//1000])
+pipe.fit(X_train, y_train)
 
 
 from sklearn import metrics
 # Model accuracy score
-predicted = pipe.predict(X_test['tweet'])
+predicted = pipe.predict(X_test)
 print(f'Accuracy: {metrics.accuracy_score(y_test, predicted)}')
 print(f'Precision: {metrics.precision_score(y_test, predicted)}')
 print(f'Recall: {metrics.recall_score(y_test, predicted)}')
@@ -116,4 +116,6 @@ print(f'Recall: {metrics.recall_score(y_test, predicted)}')
 # Predicting with test dataset
 predicted = pipe.predict(df_test['tweet'])
 submission = pd.DataFrame(predicted, columns=['prediction'])
-submission.to_csv('../submission/first_submission.csv')
+submission.index += 1
+submission.to_csv('../submission/first_submission_lg_ha.csv', index_label='Id')
+print('Saved result.') 
