@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python -u first_attempt.py
+python -u fine_tune_bert.py

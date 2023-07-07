@@ -9,9 +9,9 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 device = 'cuda'
 
+strip_func = lambda x: x.lstrip(string.digits)[1:]
 df_test = pd.read_table('test_data.txt', header=None, names=['tweet'])
 df_test['stripped_tweets'] = df_test['tweet'].apply(strip_func)
-strip_func = lambda x: x.lstrip(string.digits)[1:]
 
 
 # Tokenizer is the same as for training
